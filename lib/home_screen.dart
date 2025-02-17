@@ -17,8 +17,11 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   String _errorMessage = '';
   final TextEditingController _searchController = TextEditingController();
-  final NumberFormat _currencyFormat =
-      NumberFormat.currency(locale: 'es_PE', symbol: 'S/');
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'es_PE',
+    symbol: 'S/',
+    customPattern: 'S/ #,##0.00',
+  );
 
   Future<void> _loadProducts(BuildContext context) async {
     setState(() {
