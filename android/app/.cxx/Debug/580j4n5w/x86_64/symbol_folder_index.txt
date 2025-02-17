@@ -1,0 +1,1 @@
+/home/user002/personal/odoo_productos/build/app/intermediates/cxx/Debug/580j4n5w/obj/x86_64

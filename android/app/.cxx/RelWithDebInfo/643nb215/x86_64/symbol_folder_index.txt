@@ -1,0 +1,1 @@
+/home/user002/personal/odoo_productos/build/app/intermediates/cxx/RelWithDebInfo/643nb215/obj/x86_64
