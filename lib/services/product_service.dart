@@ -25,7 +25,7 @@ class ProductService {
           'method': 'search_read',
           'args': [
             [],
-            ['name', 'list_price']
+            ['name', 'list_price', 'barcode']
           ],
           'kwargs': {'context': {}}
         },

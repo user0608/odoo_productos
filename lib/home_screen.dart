@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:odoo_productos/barcode_scanner_screen.dart';
 import 'package:odoo_productos/services/product_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,11 +17,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String _errorMessage = '';
   final TextEditingController _searchController = TextEditingController();
 
-  Future<void> _loadProducts() async {
+  Future<void> _loadProducts(BuildContext content) async {
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
+    final errorNotifier = ScaffoldMessenger.of(context);
     try {
       final products = await ProductService().getProducts();
       setState(() {
@@ -32,6 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _errorMessage = 'Failed to load products';
       });
+      errorNotifier
+          .showSnackBar(SnackBar(content: Text('Failed to load products')));
     }
     setState(() {
       _isLoading = false;
@@ -50,14 +53,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _scanBarcode() async {
-    final scannedBarcode = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const BarcodeScannerScreen()),
-    );
-    if (scannedBarcode != null && scannedBarcode is String) {
-      _searchController.text = scannedBarcode;
-      _filterProducts(scannedBarcode);
+  Future<void> _scanBarcode(BuildContext content) async {
+    final errorNotifier = ScaffoldMessenger.of(context);
+    try {
+      final scannedBarcode = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const BarcodeScannerScreen()),
+      );
+      if (scannedBarcode != null && scannedBarcode is String) {
+        _searchController.text = scannedBarcode;
+        _filterProducts(scannedBarcode);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        errorNotifier.showSnackBar(
+          SnackBar(
+            content: Text('Error scanning barcode'),
+          ),
+        );
+      }
     }
   }
 
@@ -69,7 +83,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProducts();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _loadProducts(context);
+    });
     _searchController.addListener(() {
       setState(() {});
     });
@@ -104,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : RefreshIndicator(
-                    onRefresh: _loadProducts,
+                    onRefresh: () => _loadProducts(context),
                     child: Column(
                       children: [
                         Padding(
@@ -126,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   IconButton(
                                     icon: const Icon(Icons.camera_alt),
-                                    onPressed: _scanBarcode,
+                                    onPressed: () => _scanBarcode(context),
                                   ),
                                 ],
                               ),
@@ -151,30 +167,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-      ),
-    );
-  }
-}
-
-class BarcodeScannerScreen extends StatefulWidget {
-  const BarcodeScannerScreen({super.key});
-
-  @override
-  State<BarcodeScannerScreen> createState() => _BarcodeScannerScreenState();
-}
-
-class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Scan Barcode')),
-      body: MobileScanner(
-        onDetect: (barcodes) {
-          final first = barcodes.barcodes.first;
-          if (first.rawValue != null) {
-            Navigator.pop(context, first.rawValue);
-          }
-        },
       ),
     );
   }
