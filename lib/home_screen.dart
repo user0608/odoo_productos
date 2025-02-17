@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:odoo_productos/barcode_scanner_screen.dart';
 import 'package:odoo_productos/services/product_service.dart';
 
@@ -16,8 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   String _errorMessage = '';
   final TextEditingController _searchController = TextEditingController();
+  final NumberFormat _currencyFormat =
+      NumberFormat.currency(locale: 'es_PE', symbol: 'S/');
 
-  Future<void> _loadProducts(BuildContext content) async {
+  Future<void> _loadProducts(BuildContext context) async {
     setState(() {
       _isLoading = true;
       _errorMessage = '';
@@ -53,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _scanBarcode(BuildContext content) async {
+  Future<void> _scanBarcode(BuildContext context) async {
     final errorNotifier = ScaffoldMessenger.of(context);
     try {
       final scannedBarcode = await Navigator.push(
@@ -95,6 +98,20 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  String _formatPrice(dynamic price) {
+    try {
+      double value = 0;
+      if (price is num) {
+        value = price.toDouble();
+      } else if (price is String) {
+        value = double.tryParse(price) ?? 0;
+      }
+      return _currencyFormat.format(value);
+    } catch (_) {
+      return 'N/A';
+    }
   }
 
   @override
@@ -156,10 +173,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const Divider(height: 1),
                             itemBuilder: (context, index) {
                               final product = _filteredProducts[index];
+                              final price = product['list_price'];
                               return ListTile(
                                 title: Text(product['name'] ?? 'No Name'),
-                                subtitle: Text(
-                                    'Price: ${product['list_price'] ?? 'N/A'}'),
+                                subtitle: Text('Price: ${_formatPrice(price)}'),
                               );
                             },
                           ),
